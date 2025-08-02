@@ -1,1 +1,157 @@
-Test!
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal</title>
+    <style>
+        body {
+            background: #000;
+            color: #ca0;
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 20px;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        #terminal {
+            height: 100%;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        
+        .line {
+            display: flex;
+            margin-bottom: 5px;
+        }
+        
+        .prompt {
+            color: #ca0;
+            margin-right: 5px;
+        }
+        
+        #input {
+            background: transparent;
+            border: none;
+            color: #fc0;
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+            flex: 1;
+        }
+        
+        .output {
+            color: #fff;
+            margin: 5px 0;
+        }
+        
+        .cursor {
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div id="terminal">
+        <div class="output">Type 'help' to see available commands</div>
+        <div class="line">
+            <span class="prompt">$</span>
+            <input type="text" id="input" autofocus>
+        </div>
+    </div>
+
+    <script>
+        const terminal = document.getElementById('terminal');
+        const input = document.getElementById('input');
+        
+        const commands = {
+            help: () => `Available commands:
+  help    - Show this help message
+  clear   - Clear terminal
+  ls      - List files
+  cat     - Read file content`,
+            
+            clear: () => {
+                terminal.innerHTML = `<div class="line">
+                    <span class="prompt">$</span>
+                    <input type="text" id="input" autofocus>
+                    <span class="cursor">█</span>
+                </div>`;
+                document.getElementById('input').focus();
+                return '';
+            },
+            
+            ls: () => `about.txt  skills.txt  contact.txt  projects/`,
+            
+            cat: (args) => {
+                const file = args[0];
+                fetch(`https://adaGrad1.github.io/assets/${file}`)
+                    .then(response => {
+                        // Check if the response was successful (status code 200-299)
+                        if (!response.ok) {
+                            return `cat: ${file}: No such file.`
+                        }
+                        // Parse the response as JSON
+                        console.log(data);
+                        return response.json(); 
+                    })
+                    .then(data => {
+                        // Process the retrieved data
+                        console.log(data);
+                        return data;
+                    })
+                    .catch(error => {
+                        // Handle any errors that occurred during the fetch operation
+                        console.error('There was a problem with the fetch operation:', error);
+                    });
+            }
+        };
+        
+        function addLine(content, isCommand = false) {
+            const line = document.createElement('div');
+            if (isCommand) {
+                line.innerHTML = `<span class="prompt">$</span> ${content}`;
+                line.className = 'line';
+            } else {
+                line.textContent = content;
+                line.className = 'output';
+            }
+            
+            // Insert before the input line
+            const inputLine = terminal.querySelector('.line:last-child');
+            terminal.insertBefore(line, inputLine);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+        
+        function executeCommand(commandLine) {
+            const [cmd, ...args] = commandLine.trim().split(' ');
+            
+            if (commands[cmd]) {
+                const result = commands[cmd](args);
+                if (result) addLine(result);
+            } else if (cmd) {
+                addLine(`Command not found: ${cmd}`);
+            }
+        }
+        
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const command = input.value;
+                addLine(command, true);
+                executeCommand(command);
+                input.value = '';
+            }
+        });
+        
+        // Keep input focused
+        document.addEventListener('click', () => {
+            const currentInput = document.getElementById('input');
+            if (currentInput) currentInput.focus();
+        });
+    </script>
+</body>
+</html>

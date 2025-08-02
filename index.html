@@ -7,7 +7,7 @@
     <style>
         body {
             background: #000;
-            color: #ca0;
+            color: #0f0;
             font-family: 'Courier New', monospace;
             margin: 0;
             padding: 20px;
@@ -27,18 +27,20 @@
         }
         
         .prompt {
-            color: #ca0;
+            color: #0f0;
             margin-right: 5px;
         }
         
         #input {
             background: transparent;
             border: none;
-            color: #fc0;
+            color: #0f0;
             font-family: inherit;
             font-size: inherit;
             outline: none;
             flex: 1;
+            padding: 0;
+            margin: 0;
         }
         
         .output {
@@ -46,9 +48,6 @@
             margin: 5px 0;
         }
         
-        .cursor {
-            animation: blink 1s infinite;
-        }
         
         @keyframes blink {
             50% { opacity: 0; }
@@ -66,46 +65,54 @@
 
     <script>
         const terminal = document.getElementById('terminal');
-        const input = document.getElementById('input');
+        
+        function getInput() {
+            return document.getElementById('input');
+        }
         
         const commands = {
             help: () => `Available commands:
-  help    - Show this help message
-  clear   - Clear terminal
-  ls      - List files
-  cat     - Read file content`,
-            
+    help    - Show this help message
+    clear   - Clear terminal
+    ls      - List "files"
+    cat     - Read file content`,
             clear: () => {
-                terminal.innerHTML = `<div class="line">
-                    <span class="prompt">$</span>
-                    <input type="text" id="input" autofocus>
-                    <span class="cursor">█</span>
-                </div>`;
-                document.getElementById('input').focus();
+                // Remove all children except the input line
+                const children = Array.from(terminal.children);
+                children.forEach(child => {
+                    if (!child.classList.contains('line')) {
+                        terminal.removeChild(child);
+                    }
+                });
+                
+                // Clear the input
+                getInput().value = '';
+                getInput().focus();
                 return '';
             },
             
             ls: () => `about.txt  skills.txt  contact.txt  projects/`,
             
-            cat: (args) => {
+            cat: async (args) => {
                 const file = args[0];
-                fetch(`https://adaGrad1.github.io/assets/${file}`)
-                    .then(response => {
-                        // Check if the response was successful (status code 200-299)
-                        if (!response.ok) {
-                            return `cat: ${file}: No such file.`
-                        }
-                        // Parse the response as JSON
-                        console.log(data);
-                        return response.json(); 
-                    })
+                if (!file) return 'cat: missing file argument';
+                
+                try {
+                    const response = await fetch(`assets/${file}`);
+                    if (!response.ok) {
+                        return `cat: ${file}: No such file or directory`;
+                    }
+                    return await response.text();
+                } catch (error) {
+                    return `cat: ${file}: Error reading file`;
+                }
             }
         };
         
         function addLine(content, isCommand = false) {
             const line = document.createElement('div');
             if (isCommand) {
-                line.innerHTML = `<span class="prompt">$</span> ${content}`;
+                line.innerHTML = `<span class="prompt">$</span>${content}`;
                 line.className = 'line';
             } else {
                 line.textContent = content;
@@ -118,29 +125,30 @@
             terminal.scrollTop = terminal.scrollHeight;
         }
         
-        function executeCommand(commandLine) {
+        async function executeCommand(commandLine) {
             const [cmd, ...args] = commandLine.trim().split(' ');
             
             if (commands[cmd]) {
-                const result = commands[cmd](args);
+                const result = await commands[cmd](args);
                 if (result) addLine(result);
             } else if (cmd) {
                 addLine(`Command not found: ${cmd}`);
             }
         }
         
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                const command = input.value;
+        // Use event delegation to handle input events
+        terminal.addEventListener('keydown', (e) => {
+            if (e.target.id === 'input' && e.key === 'Enter') {
+                const command = e.target.value;
                 addLine(command, true);
                 executeCommand(command);
-                input.value = '';
+                e.target.value = '';
             }
         });
         
         // Keep input focused
         document.addEventListener('click', () => {
-            const currentInput = document.getElementById('input');
+            const currentInput = getInput();
             if (currentInput) currentInput.focus();
         });
     </script>

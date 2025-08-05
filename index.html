@@ -1,156 +1,66 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terminal</title>
-    <style>
-        body {
-            background: #000;
-            color: #0f0;
-            font-family: 'Courier New', monospace;
-            margin: 0;
-            padding: 20px;
-            height: 100vh;
-            overflow: hidden;
-        }
-        
-        #terminal {
-            height: 100%;
-            overflow-y: auto;
-            white-space: pre-wrap;
-        }
-        
-        .line {
-            display: flex;
-            margin-bottom: 5px;
-        }
-        
-        .prompt {
-            color: #0f0;
-            margin-right: 5px;
-        }
-        
-        #input {
-            background: transparent;
-            border: none;
-            color: #0f0;
-            font-family: inherit;
-            font-size: inherit;
-            outline: none;
-            flex: 1;
-            padding: 0;
-            margin: 0;
-        }
-        
-        .output {
-            color: #fff;
-            margin: 5px 0;
-        }
-        
-        
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
-    </style>
-</head>
+<head></head>
 <body>
-    <div id="terminal">
-        <div class="output">Type 'help' to see available commands</div>
-        <div class="line">
-            <span class="prompt">$</span>
-            <input type="text" id="input" autofocus>
-        </div>
-    </div>
+<style>
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.6;
+  max-width: 650px;
+  margin: 0 auto;
+  padding: 20px;
+  color: #333;
+  background-color: #efe4ff;
+}
 
-    <script>
-        const terminal = document.getElementById('terminal');
-        
-        function getInput() {
-            return document.getElementById('input');
-        }
-        
-        const commands = {
-            help: () => `Available commands:
-    help    - Show this help message
-    clear   - Clear terminal
-    ls      - List "files"
-    cat     - Read file content`,
-            clear: () => {
-                // Remove all children except the input line
-                const children = Array.from(terminal.children);
-                children.forEach(child => {
-                    if (!child.classList.contains('line')) {
-                        terminal.removeChild(child);
-                    }
-                });
-                
-                // Clear the input
-                getInput().value = '';
-                getInput().focus();
-                return '';
-            },
-            
-            ls: () => `about.txt  skills.txt  contact.txt  projects/`,
-            
-            cat: async (args) => {
-                const file = args[0];
-                if (!file) return 'cat: missing file argument';
-                
-                try {
-                    const response = await fetch(`assets/${file}`);
-                    if (!response.ok) {
-                        return `cat: ${file}: No such file or directory`;
-                    }
-                    return await response.text();
-                } catch (error) {
-                    return `cat: ${file}: Error reading file`;
-                }
-            }
-        };
-        
-        function addLine(content, isCommand = false) {
-            const line = document.createElement('div');
-            if (isCommand) {
-                line.innerHTML = `<span class="prompt">$</span>${content}`;
-                line.className = 'line';
-            } else {
-                line.textContent = content;
-                line.className = 'output';
-            }
-            
-            // Insert before the input line
-            const inputLine = terminal.querySelector('.line:last-child');
-            terminal.insertBefore(line, inputLine);
-            terminal.scrollTop = terminal.scrollHeight;
-        }
-        
-        async function executeCommand(commandLine) {
-            const [cmd, ...args] = commandLine.trim().split(' ');
-            
-            if (commands[cmd]) {
-                const result = await commands[cmd](args);
-                if (result) addLine(result);
-            } else if (cmd) {
-                addLine(`Command not found: ${cmd}`);
-            }
-        }
-        
-        // Use event delegation to handle input events
-        terminal.addEventListener('keydown', (e) => {
-            if (e.target.id === 'input' && e.key === 'Enter') {
-                const command = e.target.value;
-                addLine(command, true);
-                executeCommand(command);
-                e.target.value = '';
-            }
-        });
-        
-        // Keep input focused
-        document.addEventListener('click', () => {
-            const currentInput = getInput();
-            if (currentInput) currentInput.focus();
-        });
-    </script>
+img {
+  width: 30%;
+  margin-bottom: 20px;
+}
+
+b { 
+  color: #2c3e50;
+  font-size: 1.1em;
+}
+
+a {
+  color: #3498db;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+ul {
+  margin-left: 0;
+  padding-left: 20px;
+}
+h3 {
+  color: #000000;
+  font-weight: 600;
+}
+</style>
+<img src="assets/ada_face.png" alt="Picture of this website's author">
+<h3>Professional</h3>
+<p>
+I'm Ada Martin, a machine learning researcher at Anthropic.
+Previously, I was at FAIR where I worked on <a href="https://locate3d.atmeta.com/">Locate 3D</a> (dataset lead / ICML 2025 spotlight) and <a href="https://ai.meta.com/vjepa/">V-JEPA 2</a>.
+These papers aimed to make progress on the data scarcity problem of robotics.
+I try to work on whatever problems seem impactful, but I have a soft spot for research related to loss specification -- dataset creation, (model-based) RL, self-supervised learning.
+</p>
+<p>
+I have a <a href="https://www.linkedin.com/in/ada-martin-cmu/">LinkedIn</a> and <a href="https://adagrad.substack.com/">Substack</a>.
+I can usually be found in-person in San Francisco.
+</p>
+<h3>Personal</h3>
+<p>
+My interests aside from machine learning vary wildly from month to month and have recently included:
+</p>
+<ul>
+    <li>Emulators (see <a href="https://github.com/adaGrad1/gbemu">this little gameboy emu project</a>)</li>
+    <li>Music composition; I want to write like toby fox</li>
+    <li>Running</li>
+    <li>Abstract algebra (currently about halfway through <a href="https://archive.org/details/charles-c-pinter-a-book-of-abstract-algebra">Pinter</a>)</li>
+</ul>
+You should feel free to email me at [my first name]alexmartin@gmail.com.
+I am generally excited to have conversations with people who share my interests!
 </body>
-</html>
